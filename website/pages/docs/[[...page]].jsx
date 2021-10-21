@@ -20,7 +20,7 @@ export default function DocsLayout(props) {
       baseRoute={basePath}
       staticProps={props}
       additionalComponents={additionalComponents}
-      showVersionSelect={true}
+      showVersionSelect={'true'}
     />
   )
 }
