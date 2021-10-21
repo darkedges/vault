@@ -38,7 +38,7 @@ export async function getStaticProps({ params }) {
       navDataFile: NAV_DATA_FILE,
       localContentDir: CONTENT_DIR,
       params,
-      product,
+      product: { name: productName, slug: productSlug },
       basePath: basePath,
     })
     return { props, revalidate: 10 }
