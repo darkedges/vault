@@ -37,7 +37,6 @@ export async function getStaticProps({ params }) {
     const props = await generateStaticProps({
       navDataFile: NAV_DATA_FILE,
       localContentDir: CONTENT_DIR,
-      mainBranch,
       params,
       product,
       basePath: basePath,
