@@ -12,6 +12,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -691,10 +692,10 @@ func generateCSRSteps(t *testing.T, caCert, caKey string, intdata, reqdata map[s
 // Generates steps to test out various role permutations
 func generateRoleSteps(t *testing.T, useCSRs bool) []logicaltest.TestStep {
 	roleVals := roleEntry{
-		MaxTTL:    12 * time.Hour,
-		KeyType:   "rsa",
-		KeyBits:   2048,
-		RequireCN: true,
+		MaxTTL:        12 * time.Hour,
+		KeyType:       "rsa",
+		KeyBits:       2048,
+		RequireCN:     true,
 		SignatureBits: 256,
 	}
 	issueVals := certutil.IssueData{}
@@ -3297,6 +3298,41 @@ func TestBackend_RevokePlusTidy_Intermediate(t *testing.T) {
 
 	// Sleep a bit to make sure we're past the safety buffer
 	time.Sleep(2 * time.Second)
+
+	// Issue a tidy-status on /pki
+	{
+		tidyStatus, err := client.Logical().Read("pki/tidy-status")
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedData := map[string]interface{}{
+			"safety_buffer":              json.Number("1"),
+			"tidy_cert_store":            true,
+			"tidy_revoked_certs":         true,
+			"state":                      "Finished",
+			"error":                      nil,
+			"time_started":               nil,
+			"time_finished":              nil,
+			"message":                    nil,
+			"cert_store_deleted_count":   json.Number("1"),
+			"revoked_cert_deleted_count": json.Number("1"),
+		}
+		// Let's copy the times from the response so that we can use deep.Equal()
+		timeStarted, ok := tidyStatus.Data["time_started"]
+		if ! ok || timeStarted == "" {
+			t.Fatal("Expected tidy status response to include a value for time_started")
+		}
+		expectedData["time_started"] = timeStarted
+		timeFinished, ok := tidyStatus.Data["time_finished"]
+		if ! ok || timeFinished == "" {
+			t.Fatal("Expected tidy status response to include a value for time_finished")
+		}
+		expectedData["time_finished"] = timeFinished
+
+		if diff := deep.Equal(expectedData, tidyStatus.Data); diff != nil {
+			t.Fatal(diff)
+		}
+	}
 
 	req = client.NewRequest("GET", "/v1/pki/crl")
 	resp, err = client.RawRequest(req)
