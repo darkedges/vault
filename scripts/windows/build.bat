@@ -3,6 +3,7 @@ setlocal
 
 set _EXITCODE=0
 set _DEV_BUILD=0
+set BUILD_TAGS=%3
 
 if not exist %1 exit /b 1
 if x%2 == xVAULT_DEV set _DEV_BUILD=1
@@ -56,12 +57,13 @@ del /f "%_GO_ENV_TMP_FILE%" 2>nul
 
 :build
 REM Build!
-echo ==^> Building...
+echo ==^> Building with BUILD_TAGS: '%BUILD_TAGS%'...
 gox^
  -os="%_XC_OS%"^
  -arch="%_XC_ARCH%"^
  -ldflags "-X github.com/hashicorp/vault/sdk/version.GitCommit=%_GIT_COMMIT%%_GIT_DIRTY%"^
  -output "pkg/{{.OS}}_{{.Arch}}/vault"^
+ -tags="%BUILD_TAGS%"
  .
 
 if %ERRORLEVEL% equ 1 set %_EXITCODE%=1

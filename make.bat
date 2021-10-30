@@ -6,7 +6,7 @@ set _EXITCODE=0
 REM If no target is provided, default to test.
 if [%1]==[] goto test
 
-set _TARGETS=bin,bootstrap,dev,generate,test,testacc,testrace,vet
+set _TARGETS=bin,bootstrap,dev,dev-ui,generate,test,testacc,testrace,vet
 set _EXTERNAL_TOOLS=github.com/mitchellh/gox,github.com/kardianos/govendor
 
 REM Run target.
@@ -29,6 +29,13 @@ REM into ./bin/ as well as %GOPATH%/bin
 :dev
 	call :generate
 	call .\scripts\windows\build.bat "%CD%" VAULT_DEV
+	goto :eof
+
+REM dev creates binaries for testing Vault locally. These are put
+REM into ./bin/ as well as %GOPATH%/bin
+:dev-ui
+	call :generate
+	call .\scripts\windows\build.bat "%CD%" VAULT_DEV ui
 	goto :eof
 
 REM generate runs `go generate` to build the dynamically generated
